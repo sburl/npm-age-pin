@@ -1,0 +1,8 @@
+#!/bin/sh
+set -eu
+git diff --cached --check
+if git diff --cached --no-ext-diff --unified=0 | grep -E '^\+(<<<<<<< |=======|>>>>>>> )'; then
+  echo 'Unresolved conflict markers in staged changes' >&2
+  exit 1
+fi
+node --test

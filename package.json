@@ -1,0 +1,11 @@
+{
+  "name": "npm-age-pin",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Pin direct npm dependencies to releases at least three days old.",
+  "type": "module",
+  "bin": { "npm-age-pin": "bin/npm-age-pin.mjs" },
+  "scripts": { "test": "node --test" },
+  "engines": { "node": ">=22" },
+  "license": "MIT"
+}
