@@ -1,10 +1,30 @@
 # npm-age-pin
 
-Give new npm releases **three days (72 hours)** before installing them. Resolve a package to an eligible release, pin its exact version, and install with lifecycle scripts disabled.
+**Give new npm releases three days before running their code.**
 
-This is a small, dependency-free standalone adaptation of the release-age installer in [CrossCheck](https://github.com/sburl/CrossCheck/blob/main/scripts/install-safe-shims.sh). Background: [CrossCheck PR #143](https://github.com/sburl/CrossCheck/pull/143).
+Supply-chain attacks turn ordinary dependency installs into a way onto your machine. A compromised maintainer account can ship malicious code under a package name you already trust, and install scripts can run before you even use the library. GitHub's account of the [Shai-Hulud npm attack](https://github.blog/security/supply-chain-security/our-plan-for-a-more-secure-npm-supply-chain/) shows that pattern in practice.
 
-A waiting period can reduce exposure to freshly published malicious releases by leaving time for discovery and removal. **Age is not a malware verdict.**
+The observed activity has grown sharply: [Sonatype recorded 3,430 malicious-package advisories in 2025](https://www.sonatype.com/resources/research/attacking-the-assembly-line), compared with an annual average of 931 in 2021–2023. That's one research team's detection data, but it illustrates the scale of the problem.
+
+My default is simple: **wait before installing a new release.** Most routine dependency updates can wait three days. That leaves time for researchers, registries, and other users to notice a compromise before its code reaches my computer.
+
+`npm-age-pin` turns that waiting period into a check: select a release at least **72 hours old**, pin its exact version, and install with lifecycle scripts disabled. Tags and explicit versions must pass the age check too. If the age can't be established, the command refuses.
+
+The cutoff applies to each release, even if the package has existed for years. Three days is a practical default, not a guarantee of safety; an urgent security fix may call for a reviewed exception.
+
+## Keep agents inside the policy
+
+Coding agents can choose and install dependencies with little human attention. While fixing a build, an agent might grab the latest version, switch installers, or run `npx` and accidentally skip your waiting period.
+
+The principle behind this tool is **deterministic checks around LLMs**. An agent can propose a dependency. Code should compare its publication date with the cutoff before allowing the install. A prompt telling the agent to be careful is useful guidance, but the installation path needs to enforce the rule.
+
+For commands routed through this tool, the age check runs every time. Enforcing it across an agent's environment also means restricting alternate install paths and keeping policy changes and exceptions under human control. **This standalone command does not provide that containment:** an agent able to call plain npm, change the cutoff, or edit the wrapper can bypass the intended policy.
+
+## Waiting and Socket
+
+I use [Socket](https://socket.dev/) too. Its [npm integration](https://docs.socket.dev/docs/socket-npm-socket-npx) checks packages before installation and can block them based on security alerts. Waiting gives a bad release time to be discovered; scanning adds another check on what gets installed.
+
+This project grew out of the local installation shims in [CrossCheck](https://github.com/sburl/CrossCheck/blob/main/scripts/install-safe-shims.sh) and [PR #143](https://github.com/sburl/CrossCheck/pull/143). The broader CrossCheck shim combines release-age selection with Socket scanning when Socket is installed. **npm-age-pin is the dependency-free standalone age check; it does not bundle or invoke Socket itself.**
 
 ## Use
 
